@@ -2,7 +2,7 @@
  * grunt-contrib-symlink
  * https://github.com/gruntjs/grunt-contrib-symlink
  *
- * Copyright (c) 2015 Grunt Team
+ * Copyright (c) 2013 Grunt Team
  * Licensed under the MIT license.
  */
 
@@ -20,28 +20,37 @@ module.exports = function(grunt) {
     // default options
     var options = this.options({
       overwrite: false,
-      force: false
+      teardown: false
     });
 
     // overwrite options from CLI
     options.overwrite = grunt.option('overwrite') || options.overwrite;
 
-    // force options from CLI
-    options.force = grunt.option('force') || options.force;
-
     this.files.forEach(function(f) {
       var srcpath = f.src[0];
       var destpath = f.dest;
+
       if (!grunt.file.exists(srcpath)) {
         grunt.log.warn('Source file "' + srcpath + '" not found.');
         return;
       } else if (grunt.file.exists(destpath)) {
-        if (!options.overwrite) {
+        if (!options.overwrite && !options.teardown) {
           grunt.log.warn('Destination ' + destpath + ' already exists.');
           return;
         }
-        grunt.file.delete(destpath, {force: options.force});
+
+        grunt.file.delete(destpath);
+
+        // task has been setup to delete symbolic links.
+        if (options.teardown) {
+          return;
+        }
       }
+
+      if (options.teardown) {
+        return;
+      }
+
       // Strip any trailing slashes.
       destpath = destpath.replace(/[\\\/]$/, '');
       // The destdir is the location in which the symlink will be created.
